@@ -1,4 +1,4 @@
-(function() {
+(() => {
 
 //  ########################################################################
 //  ################################ HTML ##################################
@@ -28,25 +28,6 @@ img.src = "Untitled.png"
 //  ############################### Maths #################################
 //  #######################################################################
 
-/** @return {Number} */
-const clamp = (x, min, max) => Math.max(min, Math.min(x, max));
-
-/** @return {Number} */
-const lerp = (a, b, t) => (1 - t) * a + t * b;
-
-/** @return {Number} */
-const inverseLerp = (a, b, v) => (v - a) / (b - a);
-
-/** @return {Number} */
-const dot = (x0, y0, x1, y1) => x0 * x1 + y0 * y1;
-
-/** @param {Number} p0x @param {Number} p1x  @param {Number} p1x  @param {Number} p1y */
-const distanceSq = (p0x, p0y, p1x, p1y) => {
-	const pointsVecX = p1x - p0x;
-	const pointsVecY = p1y - p0y;
-	return pointsVecX * pointsVecX + pointsVecY * pointsVecY;
-}
-
 /**
  * @param {{ x: Number, y: Number }} point0 
  * @param {{ x: Number, y: Number }} point1 
@@ -57,87 +38,66 @@ const distance = (point0, point1) => {
 	return Math.sqrt(pointsVecX * pointsVecX + pointsVecY * pointsVecY);
 }
 
-const subtract = (vec, x, y) => {
-	vec.x -= x;
-	vec.y -= y;
-}
-
-const scale = (vec, scale) => {
-	vec.x *= scale;
-	vec.y *= scale;
-}
-
-const rotate90DegCounterclockwise = vec => {
-	const temp = vec.x;
-	vec.x = -vec.y
-	vec.y =  temp;
-}
-
-const rotate90DegClockwise = vec => {
-	const temp = vec.x;
-	vec.x =  vec.y
-	vec.y = -temp;
-}
-
-const rotate180 = vec => {
-	vec.x = -vec.x;
-	vec.y = -vec.y;
-}
-
-// TODO: fast approximate normalize for 2D
-const normalize = vec => {
-	const len = magnitudeOf(vec);
-	vec.x /= len;
-	vec.y /= len;
-}
-
-const magnitudeOf = vec => Math.sqrt(vec.x * vec.x + vec.y * vec.y);
-
-const isApprox = (v, dest) => isApproxThreshold(v, dest, 0.005);
-const isApproxThreshold = (v, dest, threshold) => Math.abs(v - dest) < threshold;
+const infinity = 9_999_999;
 
 
 //  ########################################################################
 //  ############################## Graphics ################################
 //  ########################################################################
 
-// TODO: delete
-const gameData = {
-}
-
-/** @param {MouseEvent} event */
-const mouseMove = (event) => {
-}
 
 /** @type {Array.<{ x: Number, y: Number, cons: Array.<> }>} */
 const nodes = [
-	{ x: 250, y: 190, cons: [], },
-	{ x: 350, y: 190, cons: [], },
-
-	{ x: 430, y: 190, cons: [], },
-	{ x: 430, y: 270, cons: [], },
-	{ x: 530, y: 270, cons: [], },
-	{ x: 530, y: 370, cons: [], },
-	{ x: 630, y: 370, cons: [], },
-	{ x: 630, y: 190, cons: [], },
-	{ x: 530, y: 190, cons: [], },
-
-	{ x: 350, y: 270, cons: [], },
-	{ x: 250, y: 270, cons: [], },
-	{ x: 250, y: 370, cons: [], },
-	{ x: 430, y: 370, cons: [], },
-	{ x: 430, y: 470, cons: [], },
-	{ x: 630, y: 470, cons: [], },
-	{ x: 630, y: 570, cons: [], },
-	{ x: 350, y: 570, cons: [], },
-	{ x: 350, y: 470, cons: [], },
-	{ x: 250, y: 470, cons: [], },
-	{ x: 250, y: 570, cons: [], },
 ]
+
+const addNode = (x, y) => {
+	nodes.push({ x, y, ind: nodes.length, cons: [], fscore: infinity, heuristic: 0 })
+}
+
+// HERE!
+// addNode(250, 190);
+// addNode(350, 190);
+
+// addNode(430, 190);
+// addNode(430, 270);
+// addNode(530, 270);
+// addNode(530, 370);
+// addNode(630, 370);
+// addNode(630, 190);
+// addNode(530, 190);
+
+// addNode(350, 270);
+// addNode(250, 270);
+// addNode(250, 370);
+// addNode(430, 370);
+// addNode(430, 470);
+// addNode(630, 470);
+// addNode(630, 570);
+// addNode(350, 570);
+// addNode(350, 470);
+// addNode(250, 470);
+// addNode(250, 570);
+
+
 
 /** @type {Array.<{ a: { x: Number, y: Number }, b: { x: Number, y: Number }, dist: Number }>} */
 const cons = [
 ]
+
+
+// TODO: REMOVE AUTO
+const wid = 7
+const hei = 7
+
+const pad = 100;
+
+for (let y = 0; y < hei; ++y) {
+	for (let x = 0; x < wid; ++x) {
+		addNode(50 + x * pad, 50 + y * pad);
+	}
+}
+
+
 
 const charCodeOfA = "A".charCodeAt(0);
 for (let nodeI = 0; nodeI < nodes.length; ++nodeI) {
@@ -172,34 +132,65 @@ const buildCon = (aInd, bInd) => {
 	b.cons.push(conA);
 }
 
-buildCon(0, 1);
-buildCon(1, 2);
-buildCon(2, 3);
-buildCon(3, 4);
-buildCon(4, 5);
-buildCon(5, 6);
-buildCon(6, 7);
-buildCon(7, 8);
+// HERE!
+// buildCon(0, 1);
+// buildCon(1, 2);
+// buildCon(2, 3);
+// buildCon(3, 4);
+// buildCon(4, 5);
+// buildCon(5, 6);
+// buildCon(6, 7);
+// buildCon(7, 8);
 
-buildCon(1, 9);
-buildCon(9, 10);
-buildCon(10, 11);
-buildCon(11, 12);
-buildCon(12, 13);
-buildCon(13, 14);
-buildCon(14, 15);
-buildCon(15, 16);
-buildCon(16, 17);
-buildCon(17, 18);
-buildCon(18, 19);
+// buildCon(1, 9);
+// buildCon(9, 10);
+// buildCon(10, 11);
+// buildCon(11, 12);
+// buildCon(12, 13);
+// buildCon(13, 14);
+// buildCon(14, 15);
+// buildCon(15, 16);
+// buildCon(16, 17);
+// buildCon(17, 18);
+// buildCon(18, 19);
+
+// TODO: REMOVE AUTO
+for (let y = 0; y < hei; ++y) {
+	for (let x = 0; x < wid - 1; ++x) {
+		const lin0 = y * wid + x
+		const lin1 = y * wid + x + 1
+		buildCon(lin0, lin1)
+	}
+}
+
+for (let y = 0; y < hei - 1; ++y) {
+	for (let x = 0; x < wid; ++x) {
+		const lin0 = y * wid + x
+		const lin1 = (y + 1) * wid + x
+		buildCon(lin0, lin1)
+	}
+}
+
+// TODO: Implement
+const undoCon = (ai, bi) => {
+	const a = nodes[ai];
+	const b = nodes[bi];
+	
+}
+
+
+
 
 let origin = nodes[0];
-let destin = nodes[14];
+// HERE!
+// let destin = nodes[13];
+let destin = nodes[46];
+// let destin = nodes[14];
 
 // precalculates heuristics
 for (const node of nodes) {
 	const dist = distance(node, destin)
-	node.dist = dist;
+	node.heuristic = dist;
 }
 
 
@@ -214,55 +205,124 @@ for (let i = 0; i < nodes.length; ++i) {
 	}
 	log += `\n`
 }
-console.log(log);
+// console.log(log);
 
 
-
-let lateDraw = () => {}
-
-setTimeout(() => {
-	// console.log("timeout");
-
-	// let cur = origin;
-	// let queue = []
-	// queue.push(origin);
-
-	lateDraw = () => {
-
-		const visited = new Array(nodes.length).fill(0);
-		// console.log(visited);
-
-		let cur = origin;
-		let queue = []
-		// queue.push(origin);
-
-		let next = cur.cons[0].dest;
-
-		ctx.fillStyle = "black"
-		fillCircleIn(next.x, next.y, 5);
-
-		next = next.cons[0].dest
-		ctx.fillStyle = "black"
-		fillCircleIn(next.x, next.y, 5);
-
-		// console.log(next.cons);
-		ctx.fillStyle = "black"
-		fillCircleIn(next.x, next.y, 5);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 
-		for (const cInd of origin.cons) {
+let pathSoFar = []
+let pathCol = "blue"
+const openSet = [];
+
+setTimeout(async () => {
+	
+	render();
+
+	// await sleep(500);
+	await sleep(100);
 
 
+	// const fScores = new Array(nodes.length).fill(infinity);
+	const gScores = new Array(nodes.length).fill(infinity);
+	gScores[origin.ind] = 0;
+
+	origin.fscore = 0;
+
+	openSet.push(origin);
+	// return;
+
+	while (openSet.length > 0) {
+
+		let minScoreInd = 0;
+		let minScore = openSet[minScoreInd].fscore;
+		for (let i = 1; i < openSet.length; ++i) {
+			const openNode = openSet[i];
+			if (openNode.fscore < minScore) {
+				minScoreInd = i;
+				minScore = openNode.fscore;
+			}
+		}
 
 
-			// const con = cons[cInd];
-			// console.log(con);
-			// console.log(`${JSON.stringify(con)}`);
+		const minScoreNode = openSet[minScoreInd];
+		console.log(` min score so far is ${minScore}, node is ${minScoreNode.ind}`);
+
+		if (minScoreNode === destin) {
+			pathCol = "cyan";
+			console.log(`UHU FOUND DESTIN`);
+			pathSoFar.unshift(destin);
+			return;
+		}
+
+		// TODO: bad, will return an []
+		openSet.splice(minScoreInd, 1);
+
+		// ctx.fillStyle = "black"
+		// fillCircleIn(minScoreNode.x, minScoreNode.y, 5);
+
+		for (let i = 0; i < minScoreNode.cons.length; i++) {
+			const con = minScoreNode.cons[i];
+			const connectedNode = con.dest;
+
+			const tentativeGScore = gScores[minScoreNode.ind] + con.dist;
+			// console.log(`tentative ${gScores[minScoreNode.ind].toFixed(2)} + ${con.dist.toFixed(2)} = ${tentativeGScore}`);
+			
+			// ctx.fillStyle = "black"
+			// fillCircleIn(dest.x, dest.y, 5);
+			
+			console.log(`tentative ${tentativeGScore} < ${gScores[connectedNode.ind]} ? ${tentativeGScore < gScores[connectedNode.ind]}`);
+			if (tentativeGScore < gScores[connectedNode.ind]) {
+
+				gScores[connectedNode.ind] = tentativeGScore;
+				connectedNode.fscore = tentativeGScore + connectedNode.heuristic;
+				connectedNode.cameFrom = minScoreNode;
+
+				if (!openSet.includes(connectedNode)) openSet.push(connectedNode);
+
+				pathSoFar.length = 0;
+				let last = connectedNode.cameFrom;
+				let cur  = connectedNode;
+				// pathSoFar.push(cur);
+
+				while (last) {
+					ctx.lineWidth = 5
+					drawLineBetween(cur.x, cur.y, last.x, last.y)
+
+					pathSoFar.push(last);
+					cur  = last
+					last = last.cameFrom
+				}
+
+				await sleep(200);
+
+				// ctx.fillStyle = "white"
+				// fillCircleIn(minScoreNode.x, minScoreNode.y, 5);
+			}
+
+			// ctx.fillStyle = "white"
+			// fillCircleIn(minScoreNode.x, minScoreNode.y, 5);
+
 		}
 	}
 
-// }, 500);
-}, 500);
+
+	// let next = origin.cons[0].dest;
+
+	// ctx.fillStyle = "black"
+	// fillCircleIn(next.x, next.y, 5);
+
+	// next = next.cons[0].dest
+	// ctx.fillStyle = "black"
+	// fillCircleIn(next.x, next.y, 5);
+
+	// // console.log(next.cons);
+	// ctx.fillStyle = "black"
+	// fillCircleIn(next.x, next.y, 5);
+
+}, 0);
+
+
 
 
 
@@ -275,7 +335,8 @@ const render = () => {
 	ctx.setLineDash([]);
 
 	// ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-	ctx.drawImage(img, 0, 0, img.width * 1.2, img.height * 1.2) //, canvas.width, canvas.height);
+	// ctx.drawImage(img, 0, 0, img.width * 1.2, img.height * 1.2) //, canvas.width, canvas.height);
+	ctx.drawImage(img, 0, 0, img.width * 1.3, img.height * 1.3) //, canvas.width, canvas.height);
 
 
 	// render cons
@@ -289,7 +350,8 @@ const render = () => {
 		const medx = Math.abs(con.a.x + con.b.x) * 0.5
 		const medy = Math.abs(con.a.y + con.b.y) * 0.5
 
-		ctx.fillStyle = "lime"
+		ctx.fillStyle = "white"
+		ctx.font = "15px sans-serif"
 		ctx.fillText(`${con.dist}`, medx, medy)
 	}
 
@@ -299,7 +361,7 @@ const render = () => {
 		const node = nodes[i];
 
 		// console.log(`drawing ${node.x}`);
-		ctx.fillStyle = "lime"
+		ctx.fillStyle = "white"
 		fillCircleIn(node.x, node.y, 7);
 
 		ctx.fillStyle = "yellow"
@@ -308,18 +370,42 @@ const render = () => {
 		ctx.fillText(node.i, node.x - letterW * 0.5, node.y - 12);
 	
 		ctx.fillStyle = "cyan"
-		const distTxt = `${node.dist.toFixed(0)}`;
+		const distTxt = `${node.heuristic.toFixed(0)}`;
 		const w = ctx.measureText(distTxt).width;
-		ctx.fillText(distTxt, node.x - w * 0.5, node.y + 15);
+		ctx.fillText(distTxt, node.x - w * 0.5, node.y + 20);
 	}
 
 	ctx.fillStyle = "fuchsia"
 	fillCircleIn(origin.x, origin.y, 7);
 	ctx.fillStyle = "cyan"
+	fillCircleIn(destin.x, destin.y, 14);
+	ctx.fillStyle = "black"
 	fillCircleIn(destin.x, destin.y, 7);
 
 
-	lateDraw()
+
+
+	// lateDraw()
+	console.log(`pathSoFar ${pathSoFar.length}`);
+	if (pathSoFar.length > 0) {
+		ctx.beginPath();
+		const startNode = pathSoFar[0];
+		ctx.moveTo(startNode.x, startNode.y)
+		for (let i = 1; i < pathSoFar.length; ++i) {
+			const next = pathSoFar[i];
+			ctx.lineTo(next.x, next.y)
+		}
+
+		ctx.lineWidth = 15;
+		ctx.strokeStyle = pathCol;
+		ctx.stroke();
+	}
+
+
+	for (const node of openSet) {
+		ctx.fillStyle = "lime"
+		fillCircleIn(node.x, node.y, 15)
+	}
 
 	// return;
 	window.requestAnimationFrame(render);
@@ -376,7 +462,10 @@ img.onload = evt => {
 	// console.log(evt);
 	// console.log(`loaded`);
 	// render()
-	requestAnimationFrame(render);
+
+	// requestAnimationFrame(render);
+	
+	// render();
 }
 
 const formatVec = vec => formatXY(vec.x, vec.y);
