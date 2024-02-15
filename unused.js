@@ -64,7 +64,4 @@ const normalize = vec => {
 
 const magnitudeOf = vec => Math.sqrt(vec.x * vec.x + vec.y * vec.y);
 
-const isApprox = (v, dest) => isApproxThreshold(v, dest, 0.005);
-const isApproxThreshold = (v, dest, threshold) => Math.abs(v - dest) < threshold;
-
 })()

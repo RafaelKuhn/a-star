@@ -14,7 +14,7 @@ canvas.height = document.body.clientHeight - 16;
 canvas.width  = canvas.height;
 
 // for mode 1
-canvas.width *= 1.23;
+canvas.width *= 1.22;
 
 const canvasRect = canvas.getBoundingClientRect();
 
@@ -26,8 +26,6 @@ const nbsp = "\xa0";
 
 const modeFunctionsByMode = new Map();
 const mode1 = () => {
-
-	console.log(`switching to layout 1`);
 	global.currentMode = modes.m1;
 
 	addNode(250, 190);
@@ -84,18 +82,109 @@ const mode1 = () => {
 }
 
 const mode2 = () => {
-	console.log(`switching to layout 2`);
+	mode1();
+	global.currentMode = modes.m1;
 
-
+	undoNode(15);
+	reassignNodeIndices();
+	precalculateNodeHeuristics();
 }
 
 const mode3 = () => {
-	console.log(`switching to layout 3`);
+	global.currentMode = modes.m2;
+
+	for (let y = 0; y < mode2hei; ++y) {
+		for (let x = 0; x < mode2wid; ++x) {
+			addNode(50 + x * mode2pad, 50 + y * mode2pad * 1.35);
+		}
+	}
+
+	// TODO: AUTO MODE
+	for (let y = 0; y < mode2hei; ++y) {
+		for (let x = 0; x < mode2wid - 1; ++x) {
+			const lin0 = y * mode2wid + x
+			const lin1 = y * mode2wid + x + 1
+			buildCon(lin0, lin1)
+		}
+	}
+	
+	for (let y = 0; y < mode2hei - 1; ++y) {
+		for (let x = 0; x < mode2wid; ++x) {
+			const lin0 = y * mode2wid + x
+			const lin1 = (y + 1) * mode2wid + x
+			buildCon(lin0, lin1)
+		}
+	}
+
+	global.origin = nodes[0];
+	global.destin = nodes[nodes.length - 4];
+
+	reassignNodeIndices();
+	precalculateNodeHeuristics();
+
+	global.animationDelayMs = 10;
+}
+
+const mode4 = () => {
+	global.currentMode = modes.m2;
+
+	const gambiarra = [];
+
+	for (let y = 0; y < mode2hei; ++y) {
+		for (let x = 0; x < mode2wid; ++x) {
+
+			if (x == 2 && y < mode2hei - 3) continue;
+			if (x == 10 && y > 2) continue;
+			if (x == 14 && y < mode2hei - 3) continue;
+
+			addNode(50 + x * mode2pad, 50 + y * mode2pad * 1.35);
+		}
+	}
+
+
+	// TODO: AUTO MODE
+	for (let i = 0; i < nodes.length - 1; ++i) {
+	
+		const node0 = nodes[i];
+		const node1 = nodes[i + 1];
+
+		if (isApprox(node0.y, node1.y)) {
+			if (Math.abs(node0.x - node1.x) > mode2pad) continue;
+
+			buildCon(i, i + 1);
+		}	
+	}
+
+	// GAMBIARRASSO (CRUZES)
+	for (let i = 0; i < nodes.length; ++i) {
+		const node = nodes[i];
+		const x = (node.x - 50) / mode2pad;
+		if (!gambiarra[x]) gambiarra[x] = []
+		gambiarra[x].push(i);
+	}
+	for (const gambi of gambiarra) {
+
+		for (let i = 0; i < gambi.length - 1; ++i) {
+			const superGambi0 = gambi[i];
+			const superGambi1 = gambi[i + 1];
+			buildCon(superGambi0, superGambi1);
+		}
+
+	}
+
+	global.origin = nodes[0];
+	global.destin = nodes[nodes.length - 4];
+
+	reassignNodeIndices();
+	precalculateNodeHeuristics();
+
+	global.animationDelayMs = 20;
 }
 
 modeFunctionsByMode.set("mode1", mode1)
 modeFunctionsByMode.set("mode2", mode2)
 modeFunctionsByMode.set("mode3", mode3)
+modeFunctionsByMode.set("mode4", mode4)
 
 const onChangeMode = mode => {
 	const switchMode = modeFunctionsByMode.get(mode);
@@ -106,7 +195,6 @@ const onChangeMode = mode => {
 	clearNodesAndCons();
 	switchMode();
 }
-
 
 
 
@@ -206,6 +294,9 @@ const distance = (point0, point1) => {
 	return Math.sqrt(pointsVecX * pointsVecX + pointsVecY * pointsVecY);
 }
 
+const isApprox = (v, dest) => isApproxThreshold(v, dest, 0.005);
+const isApproxThreshold = (v, dest, threshold) => Math.abs(v - dest) < threshold;
+
 const infinity = 9_999_999;
 
 
@@ -226,33 +317,6 @@ const addNode = (x, y) => {
 	nodes.push({ x, y, ind: nodes.length, cons: [], fscore: infinity, heuristic: 0 })
 }
 
-const intersections = [
-  { x: 50, y: 50 },
-  { x: 150, y: 50 },
-  { x: 250, y: 50 },
-  { x: 350, y: 50 },
-  { x: 450, y: 50 },
-  { x: 50, y: 150 },
-  { x: 150, y: 150 },
-  { x: 250, y: 150 },
-  { x: 350, y: 150 },
-  { x: 450, y: 150 },
-  { x: 50, y: 250 },
-  { x: 150, y: 250 },
-  { x: 250, y: 250 },
-  { x: 350, y: 250 },
-  { x: 450, y: 250 },
-  { x: 50, y: 350 },
-  { x: 150, y: 350 },
-  { x: 250, y: 350 },
-  { x: 350, y: 350 },
-  { x: 450, y: 350 },
-  { x: 50, y: 450 },
-  { x: 150, y: 450 },
-  { x: 250, y: 450 },
-  { x: 350, y: 450 },
-  { x: 450, y: 450 },
-];
 
 
 // CONFIG
@@ -265,6 +329,7 @@ const circleColor = "black";
 const labelColor = "darkyellow";
 
 const acceptColor = "blue";
+const failColor = "red";
 const destinColor = "blue";
 
 const nodesColor = "lime";
@@ -272,56 +337,15 @@ const nodesColor = "lime";
 const indicesColor = "black";
 
 
-// DEZ SEGUNDOS, DIMINUI PRA VER A ANIMAÇAO
-
 // unique for mode 2
-const wid = 26
-const hei = 16
-const pad = 40;
-
-let mode = 1;
-const drawIndices = mode != 0;
-
-
-if (mode === 0) {
-
-	for (let i = 0; i < intersections.length; ++i) {
-	// for (let i = 3000; i < 3500; ++i) {
-		const intersection = intersections[i];
-		// if (intersection.x % 10 === 0) continue;
-
-		// addNode(intersection.x - 45, intersection.y + 10);
-		addNode(intersection.x - 4, intersection.y - 4);
-	}
-
-} else if (mode === 2) {
-
-	for (let y = 0; y < hei; ++y) {
-		for (let x = 0; x < wid; ++x) {
-			addNode(50 + x * pad, 50 + y * pad);
-		}
-	}
-
-}
-
-
+const mode2wid = 26;
+const mode2hei = 16;
+const mode2pad = 40;
 
 
 /** @type {Array.<{ a: { x: Number, y: Number }, b: { x: Number, y: Number }, dist: Number }>} */
 const globalCons = [
 ]
-
-
-// DEBUG AUTOMATIC NODES
-// const wid = 7
-// const hei = 7
-// const pad = 100;
-// for (let y = 0; y < hei; ++y) {
-// 	for (let x = 0; x < wid; ++x) {
-// 		addNode(50 + x * pad, 50 + y * pad);
-// 	}
-// }
-
 
 
 /**
@@ -343,26 +367,6 @@ const buildCon = (aInd, bInd) => {
 	b.cons.push(conA);
 }
 
-
-if (mode === 2) {
-
-	// TODO: AUTO MODE
-	for (let y = 0; y < hei; ++y) {
-		for (let x = 0; x < wid - 1; ++x) {
-			const lin0 = y * wid + x
-			const lin1 = y * wid + x + 1
-			buildCon(lin0, lin1)
-		}
-	}
-	
-	for (let y = 0; y < hei - 1; ++y) {
-		for (let x = 0; x < wid; ++x) {
-			const lin0 = y * wid + x
-			const lin1 = (y + 1) * wid + x
-			buildCon(lin0, lin1)
-		}
-	}
-}
 
 
 const undoNode = (nodei) => {
@@ -405,29 +409,9 @@ const reassignNodeIndices = () => {
 	}
 }
 
-if (mode === 2) {
-	// for (let i = 61; i >= 52; --i) {
-	// 	undoNode(i);
-	// }
-	// reassignNodeIndices();
-
-	// kool vertical
-	for (let i = 237; i >= 3; i -= wid) {
-		undoNode(i);
-	}
-	// reassignNodeIndices();
-	
-	for (let i = 402; i >= 90; i -= wid) {
-		undoNode(i);
-	}
-	// reassignNodeIndices();
 
 
-
-}
-
-
-
+// GAMBIARRA!
 const modes = {
 	m1: 1,
 	m2: 2,
@@ -440,13 +424,6 @@ const global = {
 	animationDelayMs: 20,
 	currentMode: modes.m1,
 }
-
-// let origin = nodes[0];
-// let destin = nodes[nodes.length - 3];
-
-
-
-// precalculates heuristics
 
 
 
@@ -462,19 +439,16 @@ for (let i = 0; i < nodes.length; ++i) {
 }
 // console.log(log);
 
+
 let globalTimeoutHandle;
 const sleep = ms => new Promise(r => {
 	globalTimeoutHandle = setTimeout(r, ms);
 });
 
 let pathSoFar = []
-let pathCol = "blue"
+let pathCol = acceptColor;
 
-const openSet = [];
-
-// setTimeout(, 0);
-
-const findMinScoreInd = openSet => {
+const findMinScoreInOpenSet = () => {
 	let minScoreInd = 0;
 	let minScore = openSet[minScoreInd].fscore;
 	for (let i = 1; i < openSet.length; ++i) {
@@ -489,15 +463,13 @@ const findMinScoreInd = openSet => {
 }
 
 
-
+const openSet = [];
 const gScores = new Array(nodes.length).fill(infinity);
 
 const runAStarAsync = async () => {
 
 	state = states.playing;
-	// await sleep(100);
-
-	// const fScores = new Array(nodes.length).fill(infinity);
+	await sleep(100);
 
 	gScores.length = nodes.length;
 	for (let i = 0; i < gScores.length; ++i) gScores[i] = infinity;
@@ -513,16 +485,20 @@ const runAStarAsync = async () => {
 }
 
 const resumeAStar = async () => {
+
+	pathCol = acceptColor;
+	let failNode;
 	while (openSet.length > 0) {
 
-		const minScoreInd = findMinScoreInd(openSet);
+		const minScoreInd = findMinScoreInOpenSet();
 		const minScoreNode = openSet[minScoreInd];
+		failNode = minScoreNode;
 
-		if (minScoreNode === global.destin) {
+		const hasFoundDestination = minScoreNode === global.destin;
+		if (hasFoundDestination) {
 			pathCol = acceptColor;
 			pathSoFar.unshift(global.destin);
-			
-			console.log(`FOUND DESTIN`);
+		
 			setAsReady();
 			return;
 		}
@@ -564,6 +540,10 @@ const resumeAStar = async () => {
 
 		if (willSleep) await sleep(global.animationDelayMs);
 	}
+
+	pathCol = failColor;
+	pathSoFar.unshift(failNode);	
+	setAsReady();
 }
 
 
@@ -574,7 +554,6 @@ const render = () => {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	ctx.setLineDash([]);
 
-	// ctx.drawImage(img, 0, 0, img.width, img.height);
 
 	// RENDER CONNECTIONS
 	ctx.lineWidth = 3;
@@ -604,7 +583,6 @@ const render = () => {
 	fillCircleIn(global.destin.x, global.destin.y, circleSize);
 	ctx.fillStyle = destinColor
 	fillCircleIn(global.destin.x, global.destin.y, circleSize * 2);
-
 
 
 	if (pathSoFar.length > 0) {
@@ -647,10 +625,11 @@ const render = () => {
 
 	const drawFns = []
 
-	const drawIndices = global.currentMode !== modes.m2;
+	// const drawIndices = global.currentMode !== modes.m2;
+	const drawIndices = true;
 	if (drawIndices) drawFns.push(drawIndicesFn)
 
-	const drawHeuristics = global.currentMode !== modes.m2;
+	const drawHeuristics = global.currentMode === modes.m1;
 	if (drawHeuristics) drawFns.push(drawHeuristicsFn)
 
 	for (let i = 0; i < nodes.length; ++i) {
@@ -658,20 +637,23 @@ const render = () => {
 		for (const draw of drawFns) draw(node);
 	}
 
-	const drawLocalHeuristics = global.currentMode !== modes.m2;
+	const drawLocalHeuristics = global.currentMode === modes.m1;
 	const drawLocalHeuristicsFn = drawLocalHeuristics ? con => {
 		ctx.fillStyle = "green"
 		ctx.font = `${textSize.toFixed(0)}px sans-serif`
 		ctx.fillText(`${con.dist.toFixed(0)}`, Math.abs(con.a.x + con.b.x) * 0.5, Math.abs(con.a.y + con.b.y) * 0.5)
-	} : con => {}
+	} : () => {}
+
 	for (let i = 0; i < globalCons.length; ++i) {
 		const con = globalCons[i];
 		drawLocalHeuristicsFn(con)
 	}
 	
+	
+	// return;
+
 	// return;
 	window.requestAnimationFrame(render);
-	// ctx.setLineDash([5, 7]);
 }
 
 
@@ -744,7 +726,6 @@ const formatXYAsCoords = (x, y, digits) => {
 
 /** @type {HTMLSelectElement} */
 const select = document.getElementById("modos");
-// select.onchange = onChangeMode(select.value);
 select.onchange = () => onChangeMode(select.value);
 
 /** @type {HTMLInputElement} */
@@ -756,7 +737,10 @@ const stopButton = document.getElementById("stop");
 stopButton.onclick = stopPlaying;
 
 
-mode1();
+select.value = "mode1";
+select.onchange()
+
+
 window.requestAnimationFrame(render);
 
 
