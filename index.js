@@ -181,10 +181,67 @@ const mode4 = () => {
 	global.animationDelayMs = 20;
 }
 
+const mode5 = () => {
+	global.currentMode = modes.m2;
+
+	for (let y = 0; y < mode2hei; ++y) {
+		for (let x = 0; x < mode2wid; ++x) {
+			addNode(50 + x * mode2pad, 50 + y * mode2pad * 1.35);
+		}
+	}
+
+	// CONNECTS HORIZONTALLY
+	for (let y = 0; y < mode2hei; ++y) {
+		for (let x = 0; x < mode2wid - 1; ++x) {
+			const lin0 = y * mode2wid + x
+			const lin1 = y * mode2wid + x + 1
+			buildCon(lin0, lin1)
+		}
+	}
+
+	// // CONNECTS VERTICALLY
+	// for (let y = 0; y < mode2hei - 1; ++y) {
+	// 	for (let x = 0; x < mode2wid; ++x) {
+	// 		const lin0 = y * mode2wid + x
+	// 		const lin1 = (y + 1) * mode2wid + x
+	// 		buildCon(lin0, lin1)
+	// 	}
+	// }
+
+	// CONNECTS DIAGONALLY (MAIN DIAGONAL)
+	for (let y = 0; y < mode2hei - 1; ++y) {
+		for (let x = 0; x < mode2wid - 1; ++x) {
+			const lin0 = y * mode2wid + x
+			const lin1 = (y + 1) * mode2wid + (x+1)
+			buildCon(lin0, lin1)
+		}
+	}
+
+	// CONNECTS DIAGONALLY (ANTIDIAGONAL)
+	for (let y = 0; y < mode2hei - 1; ++y) {
+		for (let x = 1; x < mode2wid; ++x) {
+			const lin0 = y * mode2wid + x
+			const lin1 = (y + 1) * mode2wid + (x-1)
+			buildCon(lin0, lin1)
+		}
+	}
+
+	// buildCon(411, 412)
+
+	global.origin = nodes[0];
+	global.destin = nodes[nodes.length - 4];
+
+	reassignNodeIndices();
+	precalculateNodeHeuristics();
+
+	global.animationDelayMs = 10;
+}
+
 modeFunctionsByMode.set("mode1", mode1)
 modeFunctionsByMode.set("mode2", mode2)
 modeFunctionsByMode.set("mode3", mode3)
 modeFunctionsByMode.set("mode4", mode4)
+modeFunctionsByMode.set("mode5", mode5)
 
 const onChangeMode = mode => {
 	const switchMode = modeFunctionsByMode.get(mode);
