@@ -36,3 +36,12 @@ p {
 
 
 /* new stuff */
+
+input, select {
+	font-size: 1rem;
+	padding: 5px 15px 5px 15px;
+}
+
+.hidden {
+	display: none;
+}

@@ -13,6 +13,9 @@ const ctx = canvas.getContext("2d");
 canvas.height = document.body.clientHeight - 16;
 canvas.width  = canvas.height;
 
+// for mode 1
+canvas.width *= 1.23;
+
 const canvasRect = canvas.getBoundingClientRect();
 
 // constants
@@ -20,8 +23,116 @@ const TAU = 6.28318530;
 const NAN = + +'javascript é uma merda kkkkkk';
 const nbsp = "\xa0";
 
-const img = new Image();
-img.src = "Untitled.png"
+
+const modeFunctionsByMode = new Map();
+const mode1 = () => {
+	console.log(`switching to layout 1`);
+}
+
+const mode2 = () => {
+	console.log(`switching to layout 2`);
+}
+
+const mode3 = () => {
+	console.log(`switching to layout 3`);
+}
+
+modeFunctionsByMode.set("mode1", mode1)
+modeFunctionsByMode.set("mode2", mode2)
+modeFunctionsByMode.set("mode3", mode3)
+
+const onChangeMode = mode => {
+	const switchMode = modeFunctionsByMode.get(mode);
+	if (!switchMode) throw new Error(`Invalid mode: ${mode}`)
+
+	stopPlaying();
+	switchMode();
+}
+
+
+
+
+const states = {
+	ready: 0,
+	playing: 1,
+	paused: 2,
+}
+
+/** @type {Number} */
+let state = states.ready;
+
+const onPlayButtonClick = () => {
+
+	if (state === states.playing) {
+		pausePlaying();
+		return;
+	}
+
+	if (state === states.paused) {
+		resumePlaying();
+		return;
+	}
+
+	if (state === states.ready) {
+		startPlaying();
+		return;
+	}
+
+	throw new Error(`Invalid state: ${state}`)
+}
+
+const startPlaying = () => {
+	state = states.playing;
+	setPlayButtonToPause()
+	runAStarAsync();
+	showStop();
+}
+
+const pausePlaying = () => {
+	state = states.paused;
+	clearTimeout(globalTimeoutHandle);
+	setPlayButtonToResume();
+}
+
+const resumePlaying = () => {
+	state = states.playing;
+	resumeAStar();
+	setPlayButtonToPause();
+}
+
+
+const stopPlaying = () => {
+	state = states.ready;
+	clearTimeout(globalTimeoutHandle);
+
+	// resets data
+	openSet.length = 0;
+	pathSoFar.length = 0;
+	setAsReady();
+}
+
+const hideStop = () => stopButton.classList.add("hidden");
+const showStop = () => stopButton.classList.remove("hidden");
+
+
+const setAsReady = () => {
+	state = states.ready;
+	hideStop();
+	setPlayButtonToPlay();
+}
+
+const setPlayButtonToPause = () => {
+	playButton.value = "Pause"
+}
+
+const setPlayButtonToResume = () => {
+	playButton.value = "Resume"
+}
+
+const setPlayButtonToPlay = () => {
+	playButton.value = "Play"
+}
+
 
 
 //  #######################################################################
@@ -54,29 +165,109 @@ const addNode = (x, y) => {
 	nodes.push({ x, y, ind: nodes.length, cons: [], fscore: infinity, heuristic: 0 })
 }
 
-// HERE!
-// addNode(250, 190);
-// addNode(350, 190);
+const intersections = [
+  { x: 50, y: 50 },
+  { x: 150, y: 50 },
+  { x: 250, y: 50 },
+  { x: 350, y: 50 },
+  { x: 450, y: 50 },
+  { x: 50, y: 150 },
+  { x: 150, y: 150 },
+  { x: 250, y: 150 },
+  { x: 350, y: 150 },
+  { x: 450, y: 150 },
+  { x: 50, y: 250 },
+  { x: 150, y: 250 },
+  { x: 250, y: 250 },
+  { x: 350, y: 250 },
+  { x: 450, y: 250 },
+  { x: 50, y: 350 },
+  { x: 150, y: 350 },
+  { x: 250, y: 350 },
+  { x: 350, y: 350 },
+  { x: 450, y: 350 },
+  { x: 50, y: 450 },
+  { x: 150, y: 450 },
+  { x: 250, y: 450 },
+  { x: 350, y: 450 },
+  { x: 450, y: 450 },
+];
 
-// addNode(430, 190);
-// addNode(430, 270);
-// addNode(530, 270);
-// addNode(530, 370);
-// addNode(630, 370);
-// addNode(630, 190);
-// addNode(530, 190);
 
-// addNode(350, 270);
-// addNode(250, 270);
-// addNode(250, 370);
-// addNode(430, 370);
-// addNode(430, 470);
-// addNode(630, 470);
-// addNode(630, 570);
-// addNode(350, 570);
-// addNode(350, 470);
-// addNode(250, 470);
-// addNode(250, 570);
+// CONFIG
+const circleSize = 7;
+const lineWidth = 2;
+const textSize = 18;
+
+const lineColor = "black"
+const circleColor = "black";
+const labelColor = "darkyellow";
+
+const acceptColor = "magenta";
+const nodesColor = "lime";
+const destinColor = "magenta";
+const indicesColor = "black";
+
+
+// DEZ SEGUNDOS, DIMINUI PRA VER A ANIMAÇAO
+// const animationDelay = 10_000;
+const animationDelay = 20;
+
+
+// unique for mode 2
+const wid = 26
+const hei = 16
+const pad = 40;
+
+const mode = 2;
+const drawIndices = mode != 0;
+
+
+if (mode === 0) {
+
+	for (let i = 0; i < intersections.length; ++i) {
+	// for (let i = 3000; i < 3500; ++i) {
+		const intersection = intersections[i];
+		// if (intersection.x % 10 === 0) continue;
+
+		// addNode(intersection.x - 45, intersection.y + 10);
+		addNode(intersection.x - 4, intersection.y - 4);
+	}
+
+} else if (mode === 1) {
+
+	addNode(250, 190);
+	addNode(350, 190);
+
+	addNode(430, 190);
+	addNode(430, 270);
+	addNode(530, 270);
+	addNode(530, 370);
+	addNode(630, 370);
+	addNode(630, 190);
+	addNode(530, 190);
+
+	addNode(350, 270);
+	addNode(250, 270);
+	addNode(250, 370);
+	addNode(430, 370);
+	addNode(430, 470);
+	addNode(630, 470);
+	addNode(630, 570);
+	addNode(350, 570);
+	addNode(350, 470);
+	addNode(250, 470);
+	addNode(250, 570);
+} else if (mode === 2) {
+
+	for (let y = 0; y < hei; ++y) {
+		for (let x = 0; x < wid; ++x) {
+			addNode(50 + x * pad, 50 + y * pad);
+		}
+	}
+
+}
+
 
 
 
@@ -85,26 +276,23 @@ const cons = [
 ]
 
 
-// TODO: REMOVE AUTO
-const wid = 7
-const hei = 7
-
-const pad = 100;
-
-for (let y = 0; y < hei; ++y) {
-	for (let x = 0; x < wid; ++x) {
-		addNode(50 + x * pad, 50 + y * pad);
-	}
-}
+// DEBUG AUTOMATIC NODES
+// const wid = 7
+// const hei = 7
+// const pad = 100;
+// for (let y = 0; y < hei; ++y) {
+// 	for (let x = 0; x < wid; ++x) {
+// 		addNode(50 + x * pad, 50 + y * pad);
+// 	}
+// }
 
 
 
-const charCodeOfA = "A".charCodeAt(0);
+// const charCodeOfA = "A".charCodeAt(0);
 for (let nodeI = 0; nodeI < nodes.length; ++nodeI) {
 	const node = nodes[nodeI];
-	node.i = nodeI;
-	node.letter = `${String.fromCharCode(charCodeOfA + nodeI)} ${nodeI}`
-	// char += 1;
+	node.ind = nodeI;
+	// node.letter = `${String.fromCharCode(charCodeOfA + nodeI)} ${nodeI}`
 }
 
 
@@ -118,12 +306,7 @@ const buildCon = (aInd, bInd) => {
 	const con = { a, b };
 	con.dist = distance(a, b);
 
-	// const conInd = cons.length;
-	// a.cons.push(conInd);
-	// b.cons.push(conInd);
-
 	cons.push(con);
-	// console.log(con);
 
 	const conB = { dest: b, dist: con.dist }
 	const conA = { dest: a, dist: con.dist }
@@ -132,60 +315,114 @@ const buildCon = (aInd, bInd) => {
 	b.cons.push(conA);
 }
 
-// HERE!
-// buildCon(0, 1);
-// buildCon(1, 2);
-// buildCon(2, 3);
-// buildCon(3, 4);
-// buildCon(4, 5);
-// buildCon(5, 6);
-// buildCon(6, 7);
-// buildCon(7, 8);
-
-// buildCon(1, 9);
-// buildCon(9, 10);
-// buildCon(10, 11);
-// buildCon(11, 12);
-// buildCon(12, 13);
-// buildCon(13, 14);
-// buildCon(14, 15);
-// buildCon(15, 16);
-// buildCon(16, 17);
-// buildCon(17, 18);
-// buildCon(18, 19);
-
-// TODO: REMOVE AUTO
-for (let y = 0; y < hei; ++y) {
-	for (let x = 0; x < wid - 1; ++x) {
-		const lin0 = y * wid + x
-		const lin1 = y * wid + x + 1
-		buildCon(lin0, lin1)
-	}
-}
-
-for (let y = 0; y < hei - 1; ++y) {
-	for (let x = 0; x < wid; ++x) {
-		const lin0 = y * wid + x
-		const lin1 = (y + 1) * wid + x
-		buildCon(lin0, lin1)
-	}
-}
-
-// TODO: Implement
-const undoCon = (ai, bi) => {
-	const a = nodes[ai];
-	const b = nodes[bi];
+if (mode === 1) {
 	
+	// AQUI XIMIA
+	buildCon(0, 1);
+	buildCon(1, 2);
+	buildCon(2, 3);
+	buildCon(3, 4);
+	buildCon(4, 5);
+	buildCon(5, 6);
+	buildCon(6, 7);
+	buildCon(7, 8);
+
+	buildCon(1, 9);
+	buildCon(9, 10);
+	buildCon(10, 11);
+	buildCon(11, 12);
+	buildCon(12, 13);
+	buildCon(13, 14);
+	buildCon(14, 15);
+	buildCon(15, 16);
+	buildCon(16, 17);
+	buildCon(17, 18);
+	buildCon(18, 19);
+
+} else if (mode === 2) {
+
+	// TODO: AUTO MODE
+	for (let y = 0; y < hei; ++y) {
+		for (let x = 0; x < wid - 1; ++x) {
+			const lin0 = y * wid + x
+			const lin1 = y * wid + x + 1
+			buildCon(lin0, lin1)
+		}
+	}
+	
+	for (let y = 0; y < hei - 1; ++y) {
+		for (let x = 0; x < wid; ++x) {
+			const lin0 = y * wid + x
+			const lin1 = (y + 1) * wid + x
+			buildCon(lin0, lin1)
+		}
+	}
 }
+
+
+const undoNode = (nodei) => {
+	nodes.splice(nodei, 1);
+
+	// REMOVE FROM CONS
+	for (let i = cons.length - 1; i >= 0; --i) {
+		const con = cons[i];
+		if (con.a.ind === nodei || con.b.ind === nodei) {
+			cons.splice(i, 1);
+		}
+	}
+
+	// REMOVE FROM OTHER NODES
+	for (let i = nodes.length - 1; i >= 0; --i) {
+		const node = nodes[i];
+
+		for (let j = node.cons.length - 1; j >= 0; --j) {
+			const con = node.cons[j];
+			if (con.dest.ind === nodei) {
+				node.cons.splice(j, 1);
+			}
+		}
+
+	}
+
+	reassignNodeIndices();
+}
+
+const reassignNodeIndices = () => {
+	for (let i = 0; i < nodes.length; ++i) {
+		nodes[i].ind = i;
+	}
+}
+
+if (mode === 2) {
+	// for (let i = 61; i >= 52; --i) {
+	// 	undoNode(i);
+	// }
+	// reassignNodeIndices();
+
+	// kool vertical
+	for (let i = 237; i >= 3; i -= wid) {
+		undoNode(i);
+	}
+	// reassignNodeIndices();
+	
+	for (let i = 402; i >= 90; i -= wid) {
+		undoNode(i);
+	}
+	// reassignNodeIndices();
+
+
+
+}
+
 
 
 
 
 let origin = nodes[0];
-// HERE!
-// let destin = nodes[13];
-let destin = nodes[46];
-// let destin = nodes[14];
+let destin = nodes[nodes.length - 3];
+// let destin = nodes[24];
+
+
 
 // precalculates heuristics
 for (const node of nodes) {
@@ -194,12 +431,11 @@ for (const node of nodes) {
 }
 
 
-
-
+// DEBUG!
 let log = "";
 for (let i = 0; i < nodes.length; ++i) {
 	const node = nodes[i];
-	log += `${node.i}\n`
+	log += `${node.ind}\n`
 	for (const con of node.cons) {
 		log += `  -> ${con.dest.i}\n`
 	}
@@ -207,71 +443,77 @@ for (let i = 0; i < nodes.length; ++i) {
 }
 // console.log(log);
 
-
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-
+let globalTimeoutHandle;
+const sleep = ms => new Promise(r => {
+	globalTimeoutHandle = setTimeout(r, ms);
+});
 
 let pathSoFar = []
 let pathCol = "blue"
 const openSet = [];
 
-setTimeout(async () => {
-	
-	render();
+// setTimeout(, 0);
 
-	// await sleep(500);
+const findMinScoreInd = openSet => {
+	let minScoreInd = 0;
+	let minScore = openSet[minScoreInd].fscore;
+	for (let i = 1; i < openSet.length; ++i) {
+		const openNode = openSet[i];
+		if (openNode.fscore < minScore) {
+			minScoreInd = i;
+			minScore = openNode.fscore;
+		}
+	}
+
+	return minScoreInd;
+}
+
+
+
+const gScores = new Array(nodes.length).fill(infinity);
+
+const runAStarAsync = async () => {
+
+	state = states.playing;
 	await sleep(100);
 
-
 	// const fScores = new Array(nodes.length).fill(infinity);
-	const gScores = new Array(nodes.length).fill(infinity);
+
+	for (let i = 0; i < gScores.length; i++) gScores[i] = infinity;
 	gScores[origin.ind] = 0;
 
 	origin.fscore = 0;
 
+	openSet.length = 0;
 	openSet.push(origin);
-	// return;
 
+	await resumeAStar(gScores);
+}
+
+const resumeAStar = async () => {
 	while (openSet.length > 0) {
 
-		let minScoreInd = 0;
-		let minScore = openSet[minScoreInd].fscore;
-		for (let i = 1; i < openSet.length; ++i) {
-			const openNode = openSet[i];
-			if (openNode.fscore < minScore) {
-				minScoreInd = i;
-				minScore = openNode.fscore;
-			}
-		}
-
-
+		const minScoreInd = findMinScoreInd(openSet);
 		const minScoreNode = openSet[minScoreInd];
-		console.log(` min score so far is ${minScore}, node is ${minScoreNode.ind}`);
 
 		if (minScoreNode === destin) {
-			pathCol = "cyan";
-			console.log(`UHU FOUND DESTIN`);
+			pathCol = acceptColor;
 			pathSoFar.unshift(destin);
+			
+			console.log(`FOUND DESTIN`);
+			setAsReady();
 			return;
 		}
 
-		// TODO: bad, will return an []
 		openSet.splice(minScoreInd, 1);
-
-		// ctx.fillStyle = "black"
-		// fillCircleIn(minScoreNode.x, minScoreNode.y, 5);
 
 		for (let i = 0; i < minScoreNode.cons.length; i++) {
 			const con = minScoreNode.cons[i];
 			const connectedNode = con.dest;
 
 			const tentativeGScore = gScores[minScoreNode.ind] + con.dist;
-			// console.log(`tentative ${gScores[minScoreNode.ind].toFixed(2)} + ${con.dist.toFixed(2)} = ${tentativeGScore}`);
 			
-			// ctx.fillStyle = "black"
-			// fillCircleIn(dest.x, dest.y, 5);
-			
-			console.log(`tentative ${tentativeGScore} < ${gScores[connectedNode.ind]} ? ${tentativeGScore < gScores[connectedNode.ind]}`);
+			// console.log(`tentative ${tentativeGScore} < ${gScores[connectedNode.ind]} ? ${tentativeGScore < gScores[connectedNode.ind]}`);
 			if (tentativeGScore < gScores[connectedNode.ind]) {
 
 				gScores[connectedNode.ind] = tentativeGScore;
@@ -283,10 +525,9 @@ setTimeout(async () => {
 				pathSoFar.length = 0;
 				let last = connectedNode.cameFrom;
 				let cur  = connectedNode;
-				// pathSoFar.push(cur);
 
 				while (last) {
-					ctx.lineWidth = 5
+					ctx.lineWidth = lineWidth;
 					drawLineBetween(cur.x, cur.y, last.x, last.y)
 
 					pathSoFar.push(last);
@@ -294,65 +535,37 @@ setTimeout(async () => {
 					last = last.cameFrom
 				}
 
-				await sleep(200);
-
-				// ctx.fillStyle = "white"
-				// fillCircleIn(minScoreNode.x, minScoreNode.y, 5);
+				await sleep(animationDelay);
 			}
-
-			// ctx.fillStyle = "white"
-			// fillCircleIn(minScoreNode.x, minScoreNode.y, 5);
 
 		}
 	}
-
-
-	// let next = origin.cons[0].dest;
-
-	// ctx.fillStyle = "black"
-	// fillCircleIn(next.x, next.y, 5);
-
-	// next = next.cons[0].dest
-	// ctx.fillStyle = "black"
-	// fillCircleIn(next.x, next.y, 5);
-
-	// // console.log(next.cons);
-	// ctx.fillStyle = "black"
-	// fillCircleIn(next.x, next.y, 5);
-
-}, 0);
-
-
+}
 
 
 
 const render = () => {
-	// console.log(` render`);
-	// console.trace();
 
 	// reset
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	ctx.setLineDash([]);
 
-	// ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-	// ctx.drawImage(img, 0, 0, img.width * 1.2, img.height * 1.2) //, canvas.width, canvas.height);
-	ctx.drawImage(img, 0, 0, img.width * 1.3, img.height * 1.3) //, canvas.width, canvas.height);
+	// ctx.drawImage(img, 0, 0, img.width, img.height);
 
-
-	// render cons
+	// RENDER CONNECTIONS
 	ctx.lineWidth = 3;
-	ctx.strokeStyle = "red"
+	ctx.strokeStyle = lineColor
 	for (let i = 0; i < cons.length; ++i) {
 		const con = cons[i];
-		// console.log(`drawing ${con.a.x} ${con.a.y} ${con.b.x} ${con.b.y}`);
+
+		ctx.strokeStyle = "#ff000050"
+		ctx.lineWidth = lineWidth;
 		drawLineBetween(con.a.x, con.a.y, con.b.x, con.b.y);
 
-		const medx = Math.abs(con.a.x + con.b.x) * 0.5
-		const medy = Math.abs(con.a.y + con.b.y) * 0.5
-
-		ctx.fillStyle = "white"
-		ctx.font = "15px sans-serif"
-		ctx.fillText(`${con.dist}`, medx, medy)
+		// DESENHA HEURÍSTICAS PARCIAIS (DISTÂNCIA)
+		// ctx.fillStyle = "green"
+		// ctx.font = `${textSize.toFixed(0)}px sans-serif`
+		// ctx.fillText(`${con.dist.toFixed(0)}`, Math.abs(con.a.x + con.b.x) * 0.5, Math.abs(con.a.y + con.b.y) * 0.5)
 	}
 
 
@@ -361,32 +574,30 @@ const render = () => {
 		const node = nodes[i];
 
 		// console.log(`drawing ${node.x}`);
-		ctx.fillStyle = "white"
-		fillCircleIn(node.x, node.y, 7);
+		ctx.fillStyle = circleColor;
+		fillCircleIn(node.x, node.y, circleSize);
 
-		ctx.fillStyle = "yellow"
-		// TODO: recalculate from I
-		const letterW = ctx.measureText(`${node.i}`).width
-		ctx.fillText(node.i, node.x - letterW * 0.5, node.y - 12);
 	
-		ctx.fillStyle = "cyan"
-		const distTxt = `${node.heuristic.toFixed(0)}`;
-		const w = ctx.measureText(distTxt).width;
-		ctx.fillText(distTxt, node.x - w * 0.5, node.y + 20);
+		// DESENHA HEURÍSTICAS
+		// ctx.fillStyle = acceptColor
+		// const distTxt = `${node.heuristic.toFixed(0)}`;
+		// const w = ctx.measureText(distTxt).width;
+		// ctx.fillText(distTxt, node.x - w * 0.5, node.y + 20);
 	}
+	
 
+	
+	// draws PATH
 	ctx.fillStyle = "fuchsia"
-	fillCircleIn(origin.x, origin.y, 7);
-	ctx.fillStyle = "cyan"
-	fillCircleIn(destin.x, destin.y, 14);
-	ctx.fillStyle = "black"
-	fillCircleIn(destin.x, destin.y, 7);
+	fillCircleIn(origin.x, origin.y, circleSize);
+	ctx.fillStyle = acceptColor
+	fillCircleIn(destin.x, destin.y, circleSize);
+	ctx.fillStyle = destinColor
+	fillCircleIn(destin.x, destin.y, circleSize * 2);
 
 
 
 
-	// lateDraw()
-	console.log(`pathSoFar ${pathSoFar.length}`);
 	if (pathSoFar.length > 0) {
 		ctx.beginPath();
 		const startNode = pathSoFar[0];
@@ -396,21 +607,41 @@ const render = () => {
 			ctx.lineTo(next.x, next.y)
 		}
 
-		ctx.lineWidth = 15;
+		ctx.lineWidth = 6;
 		ctx.strokeStyle = pathCol;
 		ctx.stroke();
 	}
 
 
 	for (const node of openSet) {
-		ctx.fillStyle = "lime"
-		fillCircleIn(node.x, node.y, 15)
+		ctx.fillStyle = nodesColor
+		fillCircleIn(node.x, node.y, circleSize * 1.3)
 	}
 
+
+	ctx.fillStyle = indicesColor
+	// DESENHA ÍNDICES
+	for (let i = 0; i < nodes.length; ++i) {
+		const node = nodes[i];
+		if (drawIndices) {
+			const letterMeasure = ctx.measureText(`${node.ind}`)
+			const letterW = letterMeasure.width
+			const letterH = letterMeasure.actualBoundingBoxAscent + letterMeasure.actualBoundingBoxDescent
+			ctx.font = `${textSize.toFixed(0)}px sans-serif`
+			ctx.fillStyle = labelColor;
+			ctx.fillText(node.ind, node.x - letterW * 0.5, node.y - letterH * 0.5 - 1);
+		}
+	}
+
+
+	
 	// return;
 	window.requestAnimationFrame(render);
 	// ctx.setLineDash([5, 7]);
 }
+
+
+
 
 
 // TODO: delete
@@ -453,21 +684,6 @@ const drawLineBetween = (x0, y0, x1, y1) => {
 //  ############################# BOOTSTRAP ################################
 //  ########################################################################
 
-// TODO: delete
-// window.addEventListener("mousedown", onMouseDown);
-// window.addEventListener("mouseup",   onMouseUp);
-// window.addEventListener("mousemove", mouseMove);
-
-img.onload = evt => {
-	// console.log(evt);
-	// console.log(`loaded`);
-	// render()
-
-	// requestAnimationFrame(render);
-	
-	// render();
-}
-
 const formatVec = vec => formatXY(vec.x, vec.y);
 const formatXY  = (x, y) => `(${x.toFixed(2)},${y.toFixed(2)})`
 
@@ -476,6 +692,36 @@ const formatXYAsCoords = (x, y, digits) => {
 	const newY = pxToCoord(canvas.width - y);
 	return `(X: ${newX.toFixed(digits)}, Y: ${newY.toFixed(digits)})`
 }
+
+
+
+// TODO: delete
+// window.addEventListener("mousedown", onMouseDown);
+// window.addEventListener("mouseup",   onMouseUp);
+// window.addEventListener("mousemove", mouseMove);
+
+// const img = new Image();
+// img.src = "ijui.png"
+// img.src = "image.png"
+// img.onload = evt => {
+// 	canvas.width = img.width;
+// }
+
+
+/** @type {HTMLSelectElement} */
+const select = document.getElementById("modos");
+// select.onchange = onChangeMode(select.value);
+select.onchange = () => onChangeMode(select.value);
+
+/** @type {HTMLInputElement} */
+const playButton = document.getElementById("play");
+playButton.onclick = onPlayButtonClick;
+
+/** @type {HTMLInputElement} */
+const stopButton = document.getElementById("stop");
+stopButton.onclick = stopPlaying;
+
+window.requestAnimationFrame(render);
 
 
 })()
